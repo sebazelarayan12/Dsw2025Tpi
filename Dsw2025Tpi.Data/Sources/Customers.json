@@ -1,0 +1,44 @@
+[
+  {
+    "id": "b1a2c3d4-e5f6-7890-1234-567890abcdef",
+    "email": "cliente1@email.com",
+    "name": "Cliente Uno",
+    "phoneNumber": "123456789"
+  },
+  {
+    "id": "c2b3a4d5-e6f7-8901-2345-678901bcdefa",
+    "email": "cliente2@email.com",
+    "name": "Cliente Dos",
+    "phoneNumber": "987654321"
+  },
+  {
+    "id": "e7f8a9b0-c1d2-3456-7890-abcdef123456",
+    "email": "cliente3@email.com",
+    "name": "Cliente Tres",
+    "phoneNumber": "1122334455"
+  },
+  {
+    "id": "f1a2b3c4-d5e6-7890-abcd-1234567890ef",
+    "email": "cliente4@email.com",
+    "name": "Cliente Cuatro",
+    "phoneNumber": "2233445566"
+  },
+  {
+    "id": "a3b4c5d6-e7f8-9012-bcda-2345678901fe",
+    "email": "cliente5@email.com",
+    "name": "Cliente Cinco",
+    "phoneNumber": "3344556677"
+  },
+  {
+    "id": "d4e5f6a7-b8c9-0123-cdef-3456789012dc",
+    "email": "cliente6@email.com",
+    "name": "Cliente Seis",
+    "phoneNumber": "4455667788"
+  },
+  {
+    "id": "c5d6e7f8-a9b0-1234-defa-4567890123cb",
+    "email": "cliente7@email.com",
+    "name": "Cliente Siete",
+    "phoneNumber": "5566778899"
+  }
+]
