@@ -1,0 +1,29 @@
+[
+  {
+    "id": "1a2b3c4d-5e6f-7890-1234-567890abcdef",
+    "customerId": "f23a1b8c-9d45-4e67-b890-12c3d4e5f678",
+    "shippingAddress": "Av. Córdoba 1234, CABA",
+    "billingAddress": "Av. Córdoba 1234, CABA",
+    "date": "2025-01-15T14:30:00Z",
+    "totalAmount": 25000.00,
+    "status": 0
+  },
+  {
+    "id": "2b3c4d5e-6f78-9012-3456-789012345678",
+    "customerId": "a98b7c6d-5e43-4f21-9a87-6b5c4d3e2f10",
+    "shippingAddress": "San Martín 890, Rosario, Santa Fe",
+    "billingAddress": "San Martín 890, Rosario, Santa Fe",
+    "date": "2025-01-16T10:15:00Z",
+    "totalAmount": 63900.00,
+    "status": 1
+  },
+  {
+    "id": "3c4d5e6f-7890-1234-5678-901234567890",
+    "customerId": "b12c3d4e-5f67-4890-a123-b456c789d012",
+    "shippingAddress": "Belgrano 456, Mar del Plata, Buenos Aires",
+    "billingAddress": "Belgrano 456, Mar del Plata, Buenos Aires",
+    "date": "2025-01-17T16:45:00Z",
+    "totalAmount": 125000.00,
+    "status": 2
+  }
+]

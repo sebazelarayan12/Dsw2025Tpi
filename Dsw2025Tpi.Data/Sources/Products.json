@@ -1,0 +1,66 @@
+[
+  {
+    "sku": "CAM001",
+    "internalCode": "CAM-001",
+    "name": "Camisa de Polo Argentina",
+    "description": "Camisa polo de algodón 100% con bordado de escudo argentino. Ideal para uso casual.",
+    "currentUnitPrice": 12500.00,
+    "stockQuantity": 45
+  },
+  {
+    "sku": "PAN002",
+    "internalCode": "PAN-002",
+    "name": "Pantalón de Gaucho Tradicional",
+    "description": "Pantalón bombacha tradicional de gaucho, confeccionado en gabardina resistente.",
+    "currentUnitPrice": 18900.00,
+    "stockQuantity": 28
+  },
+  {
+    "sku": "SWE003",
+    "internalCode": "SWE-003",
+    "name": "Sweater Patagónico de Lana",
+    "description": "Sweater tejido a mano con lana de oveja patagónica. Diseño tradicional argentino.",
+    "currentUnitPrice": 24500.00,
+    "stockQuantity": 35
+  },
+  {
+    "sku": "BOT004",
+    "internalCode": "BOT-004",
+    "name": "Botas de Cuero Cordobesas",
+    "description": "Botas de cuero genuino de Córdoba, artesanales con costura reforzada.",
+    "currentUnitPrice": 45000.00,
+    "stockQuantity": 18
+  },
+  {
+    "sku": "VES005",
+    "internalCode": "VES-005",
+    "name": "Vestido Folclórico Salteño",
+    "description": "Vestido tradicional de Salta con bordados típicos y colores regionales.",
+    "currentUnitPrice": 32000.00,
+    "stockQuantity": 22
+  },
+  {
+    "sku": "ALF006",
+    "internalCode": "ALF-006",
+    "name": "Alpargatas Espadrillos Premium",
+    "description": "Alpargatas artesanales de lona y yute, clásicas argentinas de alta calidad.",
+    "currentUnitPrice": 8500.00,
+    "stockQuantity": 85
+  },
+  {
+    "sku": "CHM007",
+    "internalCode": "CHM-007",
+    "name": "Chomba Polo Argentino",
+    "description": "Chomba de polo argentino oficial, algodón pique con logo bordado.",
+    "currentUnitPrice": 15800.00,
+    "stockQuantity": 42
+  },
+  {
+    "sku": "PON008",
+    "internalCode": "PON-008",
+    "name": "Poncho Andino de Vicuña",
+    "description": "Poncho artesanal de los Andes argentinos, tejido en fibra de vicuña natural.",
+    "currentUnitPrice": 125000.00,
+    "stockQuantity": 8
+  }
+]
