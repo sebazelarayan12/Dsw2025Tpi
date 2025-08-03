@@ -108,7 +108,6 @@ public class Program
             });
         });
 
-        builder.Services.AddTransient<CustomExceptionHandlingMiddleware>();
 
         var app = builder.Build();
 
@@ -172,7 +171,7 @@ public class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
-        app.UseMiddleware<CustomExceptionHandlingMiddleware>();
+      
 
         app.MapControllers();
         app.MapHealthChecks("/healthcheck");
