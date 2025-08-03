@@ -1,44 +1,16 @@
-﻿using System;
+﻿using Dsw2025Tpi.Domain.Entities;
+using System;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Dsw2025Tpi.Application.Dtos
+namespace Dsw2025Tpi.Application.Dtos;
+
+public record OrderModel
 {
-    public class OrderModel
-    {
-        public record OrderItemRequest(
-            [property: JsonPropertyName("productId")] Guid ProductId,
-            [property: JsonPropertyName("quantity")] int Quantity,
-            [property: JsonPropertyName("name")] string Name,
-            [property: JsonPropertyName("description")] string Description,
-            [property: JsonPropertyName("unitPrice")] decimal CurrentUnitPrice
-        );
+    public record RequestOrderModel(string? ShippingAddress, string? BillingAddress, string? Notes, Guid CustomerId, List<OrderItemModel.RequestOrderItemModel> Items);
+    public record ResponseOrderModel(Guid Id, DateTime Date, string? ShippingAddress, string? BillingAddress, string? Notes, Guid CustomerId, OrderStatus Status, decimal TotatAmount, List<OrderItemModel.ResponseOrderItemModel> Items);
 
-        public record Request(
-            [property: JsonPropertyName("customerId")] Guid CustomerId,
-            [property: JsonPropertyName("shippingAddress")] string ShippingAddress,
-            [property: JsonPropertyName("billingAddress")] string BillingAddress,
-            [property: JsonPropertyName("orderItems")] List<OrderItemRequest> Items
-        );
-
-        public record OrderItemResponse(
-            [property: JsonPropertyName("productId")] Guid ProductId,
-            [property: JsonPropertyName("name")] string Name,
-            [property: JsonPropertyName("description")] string Description,
-            [property: JsonPropertyName("unitPrice")] decimal UnitPrice,
-            [property: JsonPropertyName("quantity")] int Quantity,
-            [property: JsonPropertyName("subtotal")] decimal Subtotal
-        );
-
-        public record Response(
-            [property: JsonPropertyName("orderId")] Guid Id,
-            [property: JsonPropertyName("customerId")] Guid CustomerId,
-            [property: JsonPropertyName("shippingAddress")] string ShippingAddress,
-            [property: JsonPropertyName("billingAddress")] string BillingAddress,
-            [property: JsonPropertyName("orderDate")] DateTime Date,
-            [property: JsonPropertyName("totalAmount")] decimal TotalAmount,
-            [property: JsonPropertyName("orderItems")] List<OrderItemResponse> Items,
-            [property: JsonPropertyName("orderStatus")] string Status
-        );
-    }
+    public record SearchOrder(Guid? CustomerId, string? Status, int PageNumber = 1, int PageSize = 10);
 }

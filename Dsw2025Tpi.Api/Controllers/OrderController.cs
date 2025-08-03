@@ -1,48 +1,58 @@
-﻿using Dsw2025Tpi.Application.Dtos;
+﻿using Azure.Core;
+using Dsw2025Tpi.Application.Dtos;
+using Dsw2025Tpi.Application.Exceptions;
+using Dsw2025Tpi.Application.Interfaces;
+using Dsw2025Tpi.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Dsw2025Tpi.Api.Controllers
+namespace Dsw2025Tpi.Api.Controllers;
+
+[ApiController]
+[Route("api/orders")]
+[Authorize]
+public class OrdersController : ControllerBase
 {
-    [ApiController]
-    [Route("api/orders")]
-    public class OrderController : ControllerBase
+    private readonly IOrdersManagementService _service;
+
+    public OrdersController(IOrdersManagementService service)
     {
-        private readonly OrdersManagementService _service;
+        _service = service;
+    }
 
-        public OrderController(OrdersManagementService service)
-        {
-            _service = service;
-        }
+    [HttpGet()]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetAllOrders([FromQuery] OrderModel.SearchOrder request)
+    {
+        var orders = await _service.GetAllOrders(request);
+        if (orders == null || !orders.Any()) throw new NoContentException("Empty List");
+        return Ok(orders);
+    }
 
-        [HttpPost]
-        public async Task<IActionResult> CreateOrder([FromBody] OrderModel.Request request)
-        {
-            try
-            {
-                var order = await _service.CreateOrder(request);
-                return CreatedAtAction(nameof(GetOrderById), new { id = order.Id }, order);
-            }
-            catch (ArgumentException ae)
-            {
-                return BadRequest(ae.Message);
-            }
-            catch (ApplicationException de)
-            {
-                return Conflict(de.Message);
-            }
-            catch (Exception)
-            {
-                return Problem("Se produjo un error al crear el pedido");
-            }
-        }
+    [HttpPost]
+    [AllowAnonymous]
+    public async Task<IActionResult> AddOrder([FromBody] OrderModel.RequestOrderModel request)
+    {
+        var orders = await _service.AddOrder(request);
+        return CreatedAtAction(nameof(GetOrderById), new { id = orders.Id }, orders);
+    }
 
-        [HttpGet("{id:Guid}")]
-        public async Task<IActionResult> GetOrderById(Guid id)
-        {
-            var order = await _service.GetOrderById(id);
-            if (order == null)
-                return NotFound();
-            return Ok(order);
-        }
+
+    [HttpGet("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetOrderById(Guid id)
+    {
+        var order = await _service.GetOrderById(id);
+        return Ok(order);
+    }
+
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UpdateOrderStatus(Guid id, [FromBody] string newStatus)
+    {
+        var updatedOrder = await _service.UpdateOrderStatus(id, newStatus);
+        if (updatedOrder == null) throw new EntityNotFoundException("Order not found");
+        return Ok(updatedOrder);
     }
 }
+

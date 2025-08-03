@@ -1,132 +1,220 @@
-﻿using Dsw2025Tpi.Application.Dtos;
+﻿using Azure.Core;
+using Dsw2025Tpi.Application.Dtos;
+using Dsw2025Tpi.Application.Exceptions;
+using Dsw2025Tpi.Application.Interfaces;
+using Dsw2025Tpi.Application.Validation;
+using Dsw2025Tpi.Data.Repositories;
 using Dsw2025Tpi.Domain.Entities;
 using Dsw2025Tpi.Domain.Interfaces;
+using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-public class OrdersManagementService
+namespace Dsw2025Tpi.Application.Services
 {
-    private readonly IRepository _repository;
-
-    public OrdersManagementService(IRepository repository)
+    public class OrdersManagementService : IOrdersManagementService
     {
-        _repository = repository;
-    }
+        private readonly IRepository _repository;
 
-    public async Task<OrderModel.Response?> GetOrderById(Guid id)
-    {
-        var order = await _repository.GetById<Order>(id, "Items", "Items.Product", "Customer");
-        if (order == null)
-            return null;
 
-        return new OrderModel.Response(
-            order.Id,
-            order.CustomerId,
-            order.ShippingAddress,
-            order.BillingAddress,
-            order.Date,
-            order.TotalAmount,
-            order.Items.Select(oi => new OrderModel.OrderItemResponse(
-                oi.ProductId,
-                oi.Product?.Name ?? "",
-                oi.Product?.Description ?? "",
-                oi.UnitPrice,
-                oi.Quantity,
-                oi.Subtotal
-            )).ToList(),
-            order.Status.ToString()
-        );
-    }
-
-    public async Task<OrderModel.Response> CreateOrder(OrderModel.Request request)
-    {
-        if (request == null || request.Items == null || !request.Items.Any())
-            throw new ArgumentException("La orden debe tener al menos un producto.");
-
-        var customer = await _repository.GetById<Customer>(request.CustomerId);
-        if (customer == null)
-            throw new ArgumentException("Cliente no encontrado.");
-
-        // Obtener todos los productos una sola vez
-        var productIds = request.Items.Select(i => i.ProductId).Distinct().ToList();
-        var productsDict = new Dictionary<Guid, Product>();
-
-        foreach (var productId in productIds)
+        public OrdersManagementService(IRepository repository)
         {
-            var product = await _repository.GetById<Product>(productId);
-            if (product == null)
-                throw new ArgumentException($"Producto con ID {productId} no encontrado.");
-            productsDict[productId] = product;
+            _repository = repository;
+        }
+        public async Task<OrderModel.ResponseOrderModel?> GetOrderById(Guid id)
+        {
+            var order = await _repository.GetById<Order>(id, nameof(Order.OrderItems), "OrderItems.Product");
+            if (order == null) throw new EntityNotFoundException($"Order not found");
+
+            var responseItems = order.OrderItems.Select(i => new OrderItemModel.ResponseOrderItemModel(
+                    i.Id,
+                    i.Quantity,
+                    i.UnitPrice,
+                    i.OrderId,
+                    i.ProductId,
+                    i.Subtotal
+                )).ToList();
+
+            return order != null ?
+                new OrderModel.ResponseOrderModel(order.Id, order.Date, order.ShippingAddress, order.BillingAddress, order.Notes, order.CustomerId, order.Status, order.TotalAmount, responseItems) :
+                null;
         }
 
-        // Verificar stock ANTES de crear la orden
-        foreach (var item in request.Items)
+        public async Task<IEnumerable<OrderModel.ResponseOrderModel>?> GetAllOrders(OrderModel.SearchOrder request)
         {
-            var product = productsDict[item.ProductId];
-            if (item.Quantity > product.StockQuantity)
-                throw new ArgumentException($"Stock insuficiente para el producto '{product.Name}'. Stock disponible: {product.StockQuantity}, solicitado: {item.Quantity}.");
-        }
-
-        // Crear la orden
-        var order = new Order
-        {
-            Date = DateTime.UtcNow,
-            ShippingAddress = request.ShippingAddress,
-            BillingAddress = request.BillingAddress,
-            Notes = "",
-            Status = OrderStatus.Pending,
-            CustomerId = customer.Id,
-            Customer = customer,
-            Items = new List<OrderItem>()
-        };
-
-        decimal total = 0;
-
-        foreach (var item in request.Items)
-        {
-            var product = productsDict[item.ProductId];
-
-            var unitPrice = product.CurrentUnitPrice;  // Precio al momento de la compra
-            var subtotal = unitPrice * item.Quantity;  // Subtotal por item
-
-            var orderItem = new OrderItem
+            OrderStatus? status = null;
+            if (!string.IsNullOrWhiteSpace(request.Status))
             {
-                ProductId = product.Id,
-                Product = product,
-                Quantity = item.Quantity,
-                UnitPrice = unitPrice,
-                Subtotal = subtotal
-            };
-            order.Items.Add(orderItem);
-            total += subtotal;  // Total acumulado
+                if (!Enum.TryParse<OrderStatus>(request.Status, true, out var parsedStatus) ||
+                !Enum.IsDefined(typeof(OrderStatus), parsedStatus) ||
+                int.TryParse(request.Status, out _))
+                {
+                    throw new ArgumentException($"Invalid order status: {request.Status}");
+                }
+                status = parsedStatus;
+            }
+
+            if (request.CustomerId.HasValue)
+            {
+                var customer = await _repository.GetById<Customer>(request.CustomerId.Value);
+                if (customer == null)
+                    throw new EntityNotFoundException($"Customer with ID {request.CustomerId} not found.");
+            }
+
+            var orders = await _repository.GetFiltered<Order>(
+                o =>
+                    o.Status != OrderStatus.CANCELLED &&
+                    (!request.CustomerId.HasValue || o.CustomerId == request.CustomerId.Value) &&
+                    (!status.HasValue || o.Status == status.Value),
+                include: new[] { "OrderItems.Product" }
+            );
+
+            if (request.PageNumber <= 0) throw new ArgumentException("Page number must be greater than zero.");
+
+            if (request.PageSize <= 0) throw new ArgumentException("Page size must be greater than zero.");
+
+            var paginatedOrders = orders.Select(
+                order => new OrderModel.ResponseOrderModel(
+                order.Id,
+                order.Date,
+                order.ShippingAddress,
+                order.BillingAddress,
+                order.Notes,
+                order.CustomerId,
+                order.Status,
+                order.TotalAmount,
+                order.OrderItems.Select(i => new OrderItemModel.ResponseOrderItemModel(
+                    i.Id,
+                    i.Quantity,
+                    i.UnitPrice,
+                    i.OrderId,
+                    i.ProductId,
+                    i.Subtotal
+                )).ToList()
+            ))
+                .Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize);
+
+            return paginatedOrders;
         }
 
-        // Descontar stock DESPUÉS de validar
-        foreach (var item in request.Items)
+        public async Task<OrderModel.ResponseOrderModel> AddOrder(OrderModel.RequestOrderModel request)
         {
-            var product = productsDict[item.ProductId];
-            product.StockQuantity -= item.Quantity;
-            await _repository.Update(product);
+            OrderValidator.Validate(request);
+
+            if (request.Items == null || !request.Items.Any())
+                throw new ArgumentException("The order must have at least one item.");
+
+            var customer = await _repository.GetById<Customer>(request.CustomerId);
+            if (customer == null)
+                throw new EntityNotFoundException($"Customer with ID {request.CustomerId} not found.");
+
+            var order = new Order(
+                request.ShippingAddress,
+                request.BillingAddress,
+                request.Notes,
+                request.CustomerId
+            );
+
+            var orderItems = new List<OrderItem>();
+
+            foreach (var item in request.Items)
+            {
+                var product = await _repository.GetById<Product>(item.ProductId)
+                    ?? throw new EntityNotFoundException($"Product not found: {item.ProductId}");
+
+                if (product.StockQuantity < item.Quantity)
+                    throw new InvalidOperationException($"Insufficient stock for product: {product.Name}");
+
+                product.StockQuantity -= item.Quantity;
+                await _repository.Update(product);
+
+                var orderItem = new OrderItem(
+                    item.Quantity,
+                    product.CurrentUnitPrice,
+                    order.Id,
+                    product.Id
+                );
+                orderItems.Add(orderItem);
+            }
+
+            order.OrderItems = orderItems;
+            await _repository.Add(order);
+
+            var responseItems = orderItems.Select(oi => new OrderItemModel.ResponseOrderItemModel(
+                oi.Id,
+                oi.Quantity,
+                oi.UnitPrice,
+                oi.OrderId,
+                oi.ProductId,
+                oi.Subtotal
+            )).ToList();
+
+            return new OrderModel.ResponseOrderModel(
+                order.Id,
+                order.Date,
+                order.ShippingAddress,
+                order.BillingAddress,
+                order.Notes,
+                order.CustomerId,
+                order.Status,
+                order.TotalAmount,
+                responseItems
+            );
         }
 
-        order.TotalAmount = total;  // Asignación final
-        var added = await _repository.Add(order);
+        public async Task<OrderModel.ResponseOrderModel> UpdateOrderStatus(Guid id, string newStatus)
+        {
+            var order = await _repository.GetById<Order>(id, nameof(Order.OrderItems), "OrderItems.Product");
 
-        return new OrderModel.Response(
-            added.Id,
-            added.CustomerId,
-            added.ShippingAddress,
-            added.BillingAddress,
-            added.Date,
-            added.TotalAmount,
-            added.Items.Select(oi => new OrderModel.OrderItemResponse(
-                oi.ProductId,
-                oi.Product?.Name ?? "",
-                oi.Product?.Description ?? "",
-                oi.UnitPrice,
-                oi.Quantity,
-                oi.Subtotal
-            )).ToList(),
-            added.Status.ToString()
-        );
+            if (order == null)
+                throw new EntityNotFoundException($"Order with ID: {id} not found");
+
+            if (!Enum.TryParse<OrderStatus>(newStatus, true, out var status) || int.TryParse(newStatus, out _))
+                throw new ArgumentException("The state entered is not valid");
+
+            if (status == OrderStatus.CANCELLED)
+            {
+                foreach (var item in order.OrderItems)
+                {
+                    var product = await _repository.GetById<Product>(item.ProductId);
+                    if (product != null)
+                    {
+                        product.StockQuantity += item.Quantity;
+                        await _repository.Update(product);
+                    }
+                }
+            }
+
+            order.Status = status;
+
+            await _repository.Update(order);
+
+            var responseItems = order.OrderItems.Select(oi => new OrderItemModel.ResponseOrderItemModel(
+            oi.Id,
+            oi.Quantity,
+            oi.UnitPrice,
+            oi.OrderId,
+            oi.ProductId,
+            oi.Subtotal
+            )).ToList();
+
+            return new OrderModel.ResponseOrderModel
+           (
+                order.Id,
+                order.Date,
+                order.ShippingAddress,
+                order.BillingAddress,
+                order.Notes,
+                order.CustomerId,
+                order.Status,
+                order.TotalAmount,
+                responseItems
+            );
+        }
     }
 }
+

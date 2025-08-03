@@ -4,17 +4,56 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dsw2025Tpi.Domain.Entities
+namespace Dsw2025Tpi.Domain.Entities;
+
+public class OrderItem : EntityBase
 {
-    public class OrderItem : EntityBase
+    public OrderItem(int quantity, decimal unitPrice, Guid orderId, Guid productId)
     {
-        public Guid OrderId { get; set; }
-        public Order Order { get; set; }
-        public Guid ProductId { get; set; }
-        public Product Product { get; set; }
-        public int Quantity { get; set; }
-        public decimal UnitPrice { get; set; }
-        public decimal Subtotal { get; set; }
-        //public decimal Subtotal => Quantity * UnitPrice;
+        ProductId = productId;
+        OrderId = orderId;
+        Quantity = quantity;
+        UnitPrice = unitPrice;
     }
+
+
+    private int _quantity;
+    public int Quantity
+    {
+        get => _quantity;
+        set
+        {
+            if (value <= 0)
+            {
+                throw new ArgumentOutOfRangeException("The quantity must be greater than or equal to 0");
+            }
+            _quantity = value;
+        }
+    }
+
+
+    private decimal _unitPrice;
+
+    public decimal UnitPrice
+    {
+        get => _unitPrice;
+        set
+        {
+            if (value < 0)
+            {
+                throw new ArgumentOutOfRangeException("The unit price must be greater than 0");
+            }
+            _unitPrice = value;
+        }
+    }
+
+    public decimal Subtotal => Quantity * UnitPrice;
+
+    public Guid OrderId { get; set; }
+    public Order? Order { get; set; }
+
+    public Guid ProductId { get; set; }
+    public Product? Product { get; set; }
+
 }
+

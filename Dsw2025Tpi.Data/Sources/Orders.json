@@ -1,29 +1,94 @@
 [
   {
-    "id": "1a2b3c4d-5e6f-7890-1234-567890abcdef",
-    "customerId": "f23a1b8c-9d45-4e67-b890-12c3d4e5f678",
-    "shippingAddress": "Av. Córdoba 1234, CABA",
-    "billingAddress": "Av. Córdoba 1234, CABA",
-    "date": "2025-01-15T14:30:00Z",
-    "totalAmount": 25000.00,
-    "status": 0
+    "shippingAddress": "Av. San Martín 1234",
+    "billingAddress": "Av. San Martín 1234",
+    "notes": "Entregar después de las 17hs",
+    "customerId": "8ee65b9a-6746-4401-a885-09a9f7c67ed2",
+    "orderItems": [
+      {
+        "quantity": 2,
+        "productId": "b9ed5544-42dc-439c-b4d7-15e720089caa"
+      }
+    ]
   },
   {
-    "id": "2b3c4d5e-6f78-9012-3456-789012345678",
-    "customerId": "a98b7c6d-5e43-4f21-9a87-6b5c4d3e2f10",
-    "shippingAddress": "San Martín 890, Rosario, Santa Fe",
-    "billingAddress": "San Martín 890, Rosario, Santa Fe",
-    "date": "2025-01-16T10:15:00Z",
-    "totalAmount": 63900.00,
-    "status": 1
+    "shippingAddress": "Calle Florida 789",
+    "billingAddress": "Av. Corrientes 456",
+    "notes": "Regalo - incluir tarjeta de felicitación",
+    "customerId": "8ee65b9a-6746-4401-a885-09a9f7c67ed4",
+    "orderItems": [
+      {
+        "quantity": 1,
+        "productId": "b9ed5544-42dc-439c-b4d7-15e720089cab"
+      },
+      {
+        "quantity": 3,
+        "productId": "b9ed5544-42dc-439c-b4d7-15e720089cac"
+      }
+    ]
   },
   {
-    "id": "3c4d5e6f-7890-1234-5678-901234567890",
-    "customerId": "b12c3d4e-5f67-4890-a123-b456c789d012",
-    "shippingAddress": "Belgrano 456, Mar del Plata, Buenos Aires",
-    "billingAddress": "Belgrano 456, Mar del Plata, Buenos Aires",
-    "date": "2025-01-17T16:45:00Z",
-    "totalAmount": 125000.00,
-    "status": 2
+    "shippingAddress": "Av. Libertador 5678",
+    "billingAddress": "Av. Libertador 5678",
+    "notes": "Factura A requerida",
+    "customerId": "8ee65b9a-6746-4401-a885-09a9f7c67ed5",
+    "orderItems": [
+      {
+        "quantity": 1,
+        "productId": "b9ed5544-42dc-439c-b4d7-15e720089cad"
+      },
+      {
+        "quantity": 2,
+        "productId": "b9ed5544-42dc-439c-b4d7-15e720089cae"
+      },
+      {
+        "quantity": 1,
+        "productId": "b9ed5544-42dc-439c-b4d7-15e720089caf"
+      }
+    ]
+  },
+  {
+    "shippingAddress": "Calle Falsa 123",
+    "billingAddress": "Calle Falsa 123",
+    "notes": "Entregar antes de las 18 hs",
+    "customerId": "8ee65b9a-6746-4401-a885-09a9f7c67ed2",
+    "orderItems": [
+      {
+        "quantity": 3,
+        "productId": "b9ed5544-42dc-439c-b4d7-15e720089cad"
+      },
+      {
+        "quantity": 1,
+        "productId": "b9ed5544-42dc-439c-b4d7-15e720089caf"
+      }
+    ]
+  },
+  {
+    "shippingAddress": "Av. Belgrano 221",
+    "billingAddress": "Av. Belgrano 221",
+    "notes": "Factura B",
+    "customerId": "8ee65b9a-6746-4401-a885-09a9f7c67ed6",
+    "orderItems": [
+      {
+        "quantity": 2,
+        "productId": "b9ed5544-42dc-439c-b4d7-15e720089cae"
+      }
+    ]
+  },
+  {
+    "shippingAddress": "San Martín 890",
+    "billingAddress": "San Martín 892",
+    "notes": "Cliente habitual - aplicar descuento",
+    "customerId": "8ee65b9a-6746-4401-a885-09a9f7c67ed4",
+    "orderItems": [
+      {
+        "quantity": 1,
+        "productId": "b9ed5544-42dc-439c-b4d7-15e720089cac"
+      },
+      {
+        "quantity": 2,
+        "productId": "b9ed5544-42dc-439c-b4d7-15e720089cab"
+      }
+    ]
   }
 ]

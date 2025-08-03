@@ -4,31 +4,51 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Dsw2025Tpi.Domain.Entities
-{
-    public class Product : EntityBase
-    {
-        public Product()
-        {
-        }
-        public Product(string sku, string name, decimal price, string internalCode, string description, int stock)
-        {
-            Sku = sku;
-            Name = name;
-            CurrentUnitPrice = price;
-            InternalCode = internalCode;
-            Description = description;
-            StockQuantity = stock;
-            IsActive = true;
-        }
-        public string? Sku { get; set; }
-        public string? Name { get; set; }
-        public decimal CurrentUnitPrice { get; set; }
-        public string InternalCode { get; set; }
-        public string Description { get; set; }
-        public int StockQuantity { get; set; }
-        public bool IsActive { get; set; }
+namespace Dsw2025Tpi.Domain.Entities;
 
-        public ICollection<OrderItem> Items { get; set; } = new HashSet<OrderItem>();
+
+public class Product : EntityBase
+{
+    public Product(string sku, string internalCode, string name, string description, decimal currentUnitPrice, int stockQuantity)
+    {
+        Sku = sku;
+        InternalCode = internalCode;
+        Name = name;
+        Description = description;
+        CurrentUnitPrice = currentUnitPrice;
+        StockQuantity = stockQuantity;
+        IsActive = true;
     }
+
+    public string Sku { get; set; }
+    public string InternalCode { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
+
+    private decimal _currentUnitPrice;
+    public decimal CurrentUnitPrice
+    {
+        get => _currentUnitPrice;
+        set
+        {
+            if (value <= 0)
+                throw new ArgumentException("The price must be greater than 0");
+            _currentUnitPrice = value;
+        }
+    }
+    private int _stockQuantity;
+    public int StockQuantity
+    {
+        get => _stockQuantity;
+        set
+        {
+            if (value < 0)
+                throw new ArgumentException("The stock quantity can't be negative");
+            _stockQuantity = value;
+        }
+    }
+    public bool IsActive { get; set; }
+
+    public ICollection<OrderItem>? Items { get; set; }
+
 }

@@ -1,113 +1,64 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Dsw2025Tpi.Application.Dtos;
+using Dsw2025Tpi.Application.Exceptions;
+using Dsw2025Tpi.Application.Interfaces;
+using Dsw2025Tpi.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
+using ApplicationException = Dsw2025Tpi.Application.Exceptions.ApplicationException;
 
-using Dsw2025Tpi.Application.Dtos;
+namespace Dsw2025Tpi.Api.Controllers;
 
 [ApiController]
-[Route("/api/products")]
+[Route("api/products")]
+[Authorize]
 public class ProductsController : ControllerBase
 {
-    private readonly ProductsManagementService _service;
+    private readonly IProductsManagementService _service;
 
-    public ProductsController(ProductsManagementService service)
+    public ProductsController(IProductsManagementService service)
     {
         _service = service;
     }
 
-    [HttpPost]
-    [Route("")]
-    public async Task<IActionResult> AddProduct([FromBody] ProductModel.Request request)
-    {
-        try
-        {
-            var product = await _service.AddProduct(request);
-            return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, product);
-        }
-        catch (ArgumentException ae)
-        {
-            return BadRequest(ae.Message);
-        }
-        catch (ApplicationException de)
-        {
-            return Conflict(de.Message);
-        }
-        catch (Exception)
-        {
-            return Problem("Se produjo un error al guardar el producto");
-        }
-    }
-
     [HttpGet()]
-    [Route("")]
-    public async Task<IActionResult> GetProducts()
+    [AllowAnonymous]
+    public async Task<IActionResult> GetAllProducts()
     {
-        var products = await _service.GetProducts();
-        if (products == null || !products.Any()) return NoContent();
+        var products = await _service.GetAllProducts();
+        if (products == null || !products.Any()) throw new NoContentException("Empty List");
         return Ok(products);
     }
 
-
-    [HttpGet()]
-    [Route("{id:Guid}")]
+    [HttpGet("{id}")]
+    [Authorize(Roles = "Admin,User")]
     public async Task<IActionResult> GetProductById(Guid id)
     {
         var product = await _service.GetProductById(id);
-        if (product == null)
-            return NotFound();
-
         return Ok(product);
     }
 
-    [HttpPut()]
-    [Route("{id:Guid}")]
-    public async Task<IActionResult> UpdateProduct(Guid id, [FromBody] ProductModel.Request request)
+    [HttpPost()]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> AddProduct([FromBody] ProductModel.RequestProductModel request)
     {
-        try
-        {
-            var product = await _service.UpdateProduct(id, request);
-            if (product == null)
-            {
-                return NotFound();
-            }
-            return Ok(product);
-        }
-        catch (ArgumentException ae)
-        {
-            return BadRequest(ae.Message);
-        }
-        catch (ApplicationException de)
-        {
-            return Conflict(de.Message);
-        }
-        catch (Exception)
-        {
-            return Problem("Se produjo un error al actualizar el producto");
-        }
-    }
-    [HttpPatch()]
-    [Route("{id:Guid}")]
-    public async Task<IActionResult> PatchProduct(Guid id)
-    {
-        try
-        {
-            var product = await _service.DeactivateProduct(id);
-            if (product == null)
-            {
-                return NotFound();
-            }
-            return NoContent();
-        }
-        catch (ArgumentException ae)
-        {
-            return BadRequest(ae.Message);
-        }
-        catch (ApplicationException de)
-        {
-            return Conflict(de.Message);
-        }
-        catch (Exception)
-        {
-            return Problem("Se produjo un error al actualizar el producto");
-        }
+        var product = await _service.AddProduct(request);
+        return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, product);
     }
 
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> UpdateProduct(Guid id, [FromBody] ProductModel.RequestProductModel request)
+    {
+        var updatedProduct = await _service.UpdateProduct(id, request);
+        return Ok(updatedProduct);
+    }
+
+    [HttpPatch("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> PatchProduct(Guid id)
+    {
+        await _service.PatchProduct(id);
+        return NoContent();
+    }
 }

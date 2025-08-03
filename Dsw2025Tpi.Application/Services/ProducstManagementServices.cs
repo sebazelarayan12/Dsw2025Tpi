@@ -1,159 +1,99 @@
 ﻿using Dsw2025Tpi.Application.Dtos;
+using Dsw2025Tpi.Application.Exceptions;
+using Dsw2025Tpi.Application.Interfaces;
+using Dsw2025Tpi.Application.Validation;
+using Dsw2025Tpi.Data.Repositories;
 using Dsw2025Tpi.Domain.Entities;
 using Dsw2025Tpi.Domain.Interfaces;
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using ApplicationException = Dsw2025Tpi.Application.Exceptions.ApplicationException;
 
-public class ProductsManagementService
+namespace Dsw2025Tpi.Application.Services
 {
-    private readonly IRepository _repository;
-
-    public ProductsManagementService(IRepository repository)
+    public class ProductsManagementService : IProductsManagementService
     {
-        _repository = repository;
-    }
+        private readonly IRepository _repository;
 
-    public async Task<ProductModel.Response> AddProduct(ProductModel.Request request)
-    {
-        // Validaciones básicas
-        if (string.IsNullOrWhiteSpace(request.Sku) || string.IsNullOrWhiteSpace(request.Name))
-            throw new ArgumentException("SKU y nombre son obligatorios.");
-
-        // Validación de precio positivo (según documento del proyecto)
-        if (request.CurrentUnitPrice <= 0)
-            throw new ArgumentException("El precio debe ser mayor a 0.");
-
-        // Validación de stock no negativo (según documento del proyecto)
-        if (request.StockQuantity < 0)
-            throw new ArgumentException("El stock no debe ser negativo.");
-
-        // Validación de SKU único (según documento del proyecto)
-        var existingProduct = await _repository.First<Product>(p => p.Sku == request.Sku);
-        if (existingProduct != null)
-            throw new ArgumentException("El SKU ya existe en el sistema.");
-
-        var product = new Product
+        public ProductsManagementService(IRepository repository)
         {
-            Sku = request.Sku,
-            InternalCode = request.InternalCode,
-            Name = request.Name,
-            Description = request.Description,
-            CurrentUnitPrice = request.CurrentUnitPrice,
-            StockQuantity = request.StockQuantity,
-            IsActive = true
-        };
-
-        var added = await _repository.Add(product);
-
-        return new ProductModel.Response(
-            added.Id,
-            added.Sku,
-            added.InternalCode,
-            added.Name,
-            added.Description,
-            added.CurrentUnitPrice,
-            added.StockQuantity,
-            added.IsActive
-        );
-    }
-
-    public async Task<ProductModel.Response?> GetProductById(Guid id)
-    {
-        var product = await _repository.GetById<Product>(id);
-        if (product == null)
-            return null;
-
-        return new ProductModel.Response(
-            product.Id,
-            product.Sku,
-            product.InternalCode,
-            product.Name,
-            product.Description,
-            product.CurrentUnitPrice,
-            product.StockQuantity,
-            product.IsActive
-        );
-    }
-
-    public async Task<IEnumerable<ProductModel.Response>?> GetProducts()
-    {
-        var products = await _repository.GetFiltered<Product>(p => p.IsActive);
-        return products?.Select(p => new ProductModel.Response(
-            p.Id,
-            p.Sku,
-            p.InternalCode,
-            p.Name,
-            p.Description,
-            p.CurrentUnitPrice,
-            p.StockQuantity,
-            p.IsActive
-        ));
-    }
-
-    public async Task<ProductModel.Response> UpdateProduct(Guid id, ProductModel.Request request)
-    {
-        var product = await _repository.GetById<Product>(id);
-        if (product == null)
-            throw new ApplicationException("Producto no encontrado.");
-
-        // Validaciones básicas
-        if (string.IsNullOrWhiteSpace(request.Sku) || string.IsNullOrWhiteSpace(request.Name))
-            throw new ArgumentException("SKU y nombre son obligatorios.");
-
-        // Validación de precio positivo
-        if (request.CurrentUnitPrice <= 0)
-            throw new ArgumentException("El precio debe ser mayor a 0.");
-
-        // Validación de stock no negativo
-        if (request.StockQuantity < 0)
-            throw new ArgumentException("El stock no debe ser negativo.");
-
-        // Validación de SKU único (solo si está cambiando el SKU)
-        if (product.Sku != request.Sku)
+            _repository = repository;
+        }
+        public async Task<ProductModel.ResponseProductModel?> GetProductById(Guid id)
         {
-            var existingProduct = await _repository.First<Product>(p => p.Sku == request.Sku);
-            if (existingProduct != null)
-                throw new ArgumentException("El SKU ya existe en el sistema.");
+            var product = await _repository.GetById<Product>(id);
+            if (product == null)
+                throw new EntityNotFoundException("Product not found");
+            return product != null ?
+                new ProductModel.ResponseProductModel(product.Id, product.Sku, product.InternalCode, product.Name, product.Description, product.CurrentUnitPrice, product.StockQuantity, product.IsActive) :
+                null;
         }
 
-        product.Sku = request.Sku;
-        product.InternalCode = request.InternalCode;
-        product.Name = request.Name;
-        product.Description = request.Description;
-        product.CurrentUnitPrice = request.CurrentUnitPrice;
-        product.StockQuantity = request.StockQuantity;
+        public async Task<IEnumerable<ProductModel.ResponseProductModel>?> GetAllProducts()
+        {
+            return (await _repository
+                .GetFiltered<Product>(p => p.IsActive))?
+                .Select(p => new ProductModel.ResponseProductModel(p.Id, p.Sku, p.InternalCode, p.Name, p.Description,
+                p.CurrentUnitPrice, p.StockQuantity, p.IsActive));
 
-        var updated = await _repository.Update(product);
+        }
 
-        return new ProductModel.Response(
-            updated.Id,
-            updated.Sku,
-            updated.InternalCode,
-            updated.Name,
-            updated.Description,
-            updated.CurrentUnitPrice,
-            updated.StockQuantity,
-            updated.IsActive
-        );
-    }
+        public async Task<ProductModel.ResponseProductModel> AddProduct(ProductModel.RequestProductModel request)
+        {
+            ProductValidator.Validate(request);
+            var exist = await _repository.First<Product>(p => p.Sku == request.Sku);
+            if (exist != null) throw new DuplicatedEntityException($"A product with Sku {request.Sku} already exists");
+            var product = new Product(request.Sku, request.InternalCode, request.Name, request.Description, request.CurrentUnitPrice, request.StockQuantity);
+            await _repository.Add(product);
+            return new ProductModel.ResponseProductModel(product.Id, product.Sku, product.InternalCode, product.Name, product.Description,
+                product.CurrentUnitPrice, product.StockQuantity, product.IsActive);
+        }
+        public async Task<ProductModel.ResponseProductModel> UpdateProduct(Guid id, ProductModel.RequestProductModel request)
+        {
+            var exist = await _repository.GetById<Product>(id);
+            if (exist == null)
+                throw new EntityNotFoundException("Product not found");
 
-    public async Task<ProductModel.Response?> DeactivateProduct(Guid id)
-    {
-        var product = await _repository.GetById<Product>(id);
-        if (product == null)
-            return null;
+            ProductValidator.Validate(request);
 
-        product.IsActive = false;
-        var updated = await _repository.Update(product);
+            var sku = await _repository.First<Product>(p => p.Sku == request.Sku && p.IsActive);
+            if (sku != null) throw new DuplicatedEntityException($"A product with Sku {request.Sku} already exists");
 
-        return new ProductModel.Response(
-            updated.Id,
-            updated.Sku,
-            updated.InternalCode,
-            updated.Name,
-            updated.Description,
-            updated.CurrentUnitPrice,
-            updated.StockQuantity,
-            updated.IsActive
-        );
+            exist.Sku = request.Sku;
+            exist.InternalCode = request.InternalCode;
+            exist.Name = request.Name;
+            exist.Description = request.Description;
+            exist.CurrentUnitPrice = request.CurrentUnitPrice;
+            exist.StockQuantity = request.StockQuantity;
+
+            await _repository.Update(exist);
+
+            return new ProductModel.ResponseProductModel
+           (
+                exist.Id,
+                exist.Sku,
+                exist.InternalCode,
+                exist.Name,
+                exist.Description,
+                exist.CurrentUnitPrice,
+                exist.StockQuantity,
+                exist.IsActive
+            );
+        }
+
+        public async Task PatchProduct(Guid id)
+        {
+            var exist = await _repository.GetById<Product>(id);
+            if (exist == null)
+                throw new EntityNotFoundException("Product not found");
+            if (exist.IsActive == false)
+                throw new ApplicationException("The product was already disabled");
+            exist.IsActive = false;
+            await _repository.Update(exist);
+        }
     }
 }
+

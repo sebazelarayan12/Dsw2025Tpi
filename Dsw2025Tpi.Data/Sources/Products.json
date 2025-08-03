@@ -1,66 +1,56 @@
 [
   {
-    "sku": "CAM001",
-    "internalCode": "CAM-001",
-    "name": "Camisa de Polo Argentina",
-    "description": "Camisa polo de algodón 100% con bordado de escudo argentino. Ideal para uso casual.",
-    "currentUnitPrice": 12500.00,
-    "stockQuantity": 45
+    "id": "b9ed5544-42dc-439c-b4d7-15e720089caa",
+    "sku": "ABC123",
+    "internalCode": "INT-001",
+    "name": "Producto de ejemplo",
+    "description": "Descripción del producto de ejemplo.",
+    "currentUnitPrice": 199.99,
+    "stockQuantity": 50
   },
   {
-    "sku": "PAN002",
-    "internalCode": "PAN-002",
-    "name": "Pantalón de Gaucho Tradicional",
-    "description": "Pantalón bombacha tradicional de gaucho, confeccionado en gabardina resistente.",
-    "currentUnitPrice": 18900.00,
-    "stockQuantity": 28
+    "id": "b9ed5544-42dc-439c-b4d7-15e720089cab",
+    "sku": "XYZ456",
+    "internalCode": "INT-002",
+    "name": "Otro producto de ejemplo",
+    "description": "Descripción de otro producto de ejemplo.",
+    "currentUnitPrice": 299.99,
+    "stockQuantity": 30
   },
   {
-    "sku": "SWE003",
-    "internalCode": "SWE-003",
-    "name": "Sweater Patagónico de Lana",
-    "description": "Sweater tejido a mano con lana de oveja patagónica. Diseño tradicional argentino.",
-    "currentUnitPrice": 24500.00,
-    "stockQuantity": 35
+    "id": "b9ed5544-42dc-439c-b4d7-15e720089cac",
+    "sku": "LMN789",
+    "internalCode": "INT-003",
+    "name": "Producto adicional",
+    "description": "Descripción de un producto adicional.",
+    "currentUnitPrice": 149.99,
+    "stockQuantity": 75
   },
   {
-    "sku": "BOT004",
-    "internalCode": "BOT-004",
-    "name": "Botas de Cuero Cordobesas",
-    "description": "Botas de cuero genuino de Córdoba, artesanales con costura reforzada.",
-    "currentUnitPrice": 45000.00,
-    "stockQuantity": 18
+    "id": "b9ed5544-42dc-439c-b4d7-15e720089cad",
+    "sku": "PQR012",
+    "internalCode": "INT-004",
+    "name": "Producto especial",
+    "description": "Descripción de un producto especial.",
+    "currentUnitPrice": 399.99,
+    "stockQuantity": 20
   },
   {
-    "sku": "VES005",
-    "internalCode": "VES-005",
-    "name": "Vestido Folclórico Salteño",
-    "description": "Vestido tradicional de Salta con bordados típicos y colores regionales.",
-    "currentUnitPrice": 32000.00,
-    "stockQuantity": 22
+    "id": "b9ed5544-42dc-439c-b4d7-15e720089cae",
+    "sku": "STU345",
+    "internalCode": "INT-005",
+    "name": "Producto de temporada",
+    "description": "Descripción de un producto de temporada.",
+    "currentUnitPrice": 89.99,
+    "stockQuantity": 100
   },
   {
-    "sku": "ALF006",
-    "internalCode": "ALF-006",
-    "name": "Alpargatas Espadrillos Premium",
-    "description": "Alpargatas artesanales de lona y yute, clásicas argentinas de alta calidad.",
-    "currentUnitPrice": 8500.00,
-    "stockQuantity": 85
-  },
-  {
-    "sku": "CHM007",
-    "internalCode": "CHM-007",
-    "name": "Chomba Polo Argentino",
-    "description": "Chomba de polo argentino oficial, algodón pique con logo bordado.",
-    "currentUnitPrice": 15800.00,
-    "stockQuantity": 42
-  },
-  {
-    "sku": "PON008",
-    "internalCode": "PON-008",
-    "name": "Poncho Andino de Vicuña",
-    "description": "Poncho artesanal de los Andes argentinos, tejido en fibra de vicuña natural.",
-    "currentUnitPrice": 125000.00,
-    "stockQuantity": 8
+    "id": "b9ed5544-42dc-439c-b4d7-15e720089caf",
+    "sku": "FDD234",
+    "internalCode": "FDD-234",
+    "name": "FDD Prime",
+    "description": "Perfume de Nicho Elixir",
+    "currentUnitPrice": 999999.99,
+    "stockQuantity": 3
   }
 ]

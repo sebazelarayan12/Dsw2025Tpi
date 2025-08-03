@@ -1,48 +1,164 @@
+using Dsw2025Tpi.Api.DependencyInjection;
+using Dsw2025Tpi.Application.Services;
 using Dsw2025Tpi.Data;
-using Dsw2025Tpi.Data.Repositories;
+using Dsw2025Tpi.Data.Helpers;
 using Dsw2025Tpi.Domain.Entities;
-using Dsw2025Tpi.Domain.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using System;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Json.Serialization;
+
 
 namespace Dsw2025Tpi.Api;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
+        builder.Services.AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
 
-        builder.Services.AddControllers();
-        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(options =>
         {
-            options.CustomSchemaIds(type => type.FullName?.Replace("+", "."));
+            options.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "Dsw2025TPI - FLJ",
+                Version = "v4",
+            });
+            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                In = ParameterLocation.Header,
+                Name = "Authorization",
+                Description = "Ingresar el token",
+                Type = SecuritySchemeType.ApiKey
+            });
+            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
         });
         builder.Services.AddHealthChecks();
-
-        /*builder.Services.AddDbContext<Dsw2025TpiContext>(options =>
+        builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
         {
-            options.UseSqlServer(builder.Configuration.GetConnectionString("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=DswTpiCatalogo;Integrated Security=True;"));
-            options.UseSeeding((c,t) =>
+            options.Password = new PasswordOptions
             {
-                ((Dsw2025TpiContext)c).Seedwork<Customer>("Sources\\Customers.json");
-            });
-        });*/
-        builder.Services.AddDbContext<Dsw2025TpiContext>(options =>
-        options.UseSqlServer("Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=DswTpiCatalogo;Integrated Security=True;"));
+                RequiredLength = 8
+            };
 
-        builder.Services.AddTransient<IRepository, EfRepository>();
-        builder.Services.AddScoped<ProductsManagementService>();
-        builder.Services.AddScoped<OrdersManagementService>();
+        })
+               .AddEntityFrameworkStores<AuthenticateContext>()
+               .AddDefaultTokenProviders();
+
+        builder.Services.AddDomainServices(builder.Configuration);
+        builder.Services.AddDbContext<AuthenticateContext>(options => {
+            options.UseSqlServer(builder.Configuration.GetConnectionString("Dsw2025Tpi"));
+        });
+        builder.Services.AddSingleton<JwtTokenService>();
+        var jwtConfig = builder.Configuration.GetSection("Jwt");
+        var keyText = jwtConfig["Key"] ?? throw new ArgumentNullException("JWT Key");
+        var key = Encoding.UTF8.GetBytes(keyText);
+
+        builder.Services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtConfig["Issuer"],
+                ValidAudience = jwtConfig["Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                RoleClaimType = ClaimTypes.Role
+            };
+        });
+
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("PermitirFrontend", policy =>
+            {
+                policy.WithOrigins("http://localhost:3000")
+                      .AllowAnyHeader()
+                      .AllowAnyMethod();
+            });
+        });
+
+        builder.Services.AddTransient<CustomExceptionHandlingMiddleware>();
 
         var app = builder.Build();
 
-        // Configure the HTTP request pipeline.
+        var rolesToCreate = builder.Configuration.GetSection("Roles").Get<List<string>>();
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<Dsw2025TpiContext>();
+            dbContext.Database.Migrate();
+            var authContext = scope.ServiceProvider.GetRequiredService<AuthenticateContext>();
+            authContext.Database.Migrate();
+            dbContext.Seedwork<Product>("Sources/products.json");
+            dbContext.Seedwork<Customer>("Sources/customers.json");
+            dbContext.Seedwork<Order>("Sources/orders.json");
+           
+            
+            
+
+            var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+            foreach (var roleName in rolesToCreate!)
+            {
+                if (!await roleManager.RoleExistsAsync(roleName))
+                {
+                    await roleManager.CreateAsync(new IdentityRole(roleName));
+                }
+            }
+
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+            var adminSection = builder.Configuration.GetSection("DefaultAdminUser");
+
+            var adminUser = await userManager.FindByNameAsync(adminSection["UserName"]);
+            if (adminUser == null)
+            {
+                var newUser = new IdentityUser
+                {
+                    UserName = adminSection["UserName"],
+                    Email = adminSection["Email"],
+                    EmailConfirmed = true
+                };
+
+                var result = await userManager.CreateAsync(newUser, adminSection["Password"]);
+                if (result.Succeeded)
+                {
+                    await userManager.AddToRoleAsync(newUser, adminSection["Role"]);
+                }
+            }
+
+        }
+
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
@@ -51,20 +167,16 @@ public class Program
 
         app.UseHttpsRedirection();
 
+        app.UseCors("PermitirFrontend");
+
+        app.UseAuthentication();
         app.UseAuthorization();
 
-        app.MapControllers();
+        app.UseMiddleware<CustomExceptionHandlingMiddleware>();
 
+        app.MapControllers();
         app.MapHealthChecks("/healthcheck");
-        // seed de clientes
-        using (var scope = app.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<Dsw2025TpiContext>();
-            db.Seedwork<Customer>("Sources\\Customers.json");
-        }
+
         app.Run();
     }
 }
-
-public record Request(string Sku, string InternalCode, string Name, string Description, decimal CurrentUnitPrice, int StockQuantity);
-

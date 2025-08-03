@@ -1,27 +1,15 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Dsw2025Tpi.Application.Dtos
+namespace Dsw2025Tpi.Application.Dtos;
+
+public record ProductModel
 {
-    public class ProductModel
-    {
-        public record Request(
-            [property: JsonPropertyName("sku")] string Sku,
-            [property: JsonPropertyName("internalCode")] string InternalCode,
-            [property: JsonPropertyName("name")] string Name,
-            [property: JsonPropertyName("description")] string Description,
-            [property: JsonPropertyName("currentUnitPrice")] decimal CurrentUnitPrice,
-            [property: JsonPropertyName("stockQuantity")] int StockQuantity
-        );
+    public record RequestProductModel(string Sku, string InternalCode, string Name, string Description, decimal CurrentUnitPrice, int StockQuantity);
 
-        public record Response(
-            [property: JsonPropertyName("productId")] Guid Id,
-            [property: JsonPropertyName("sku")] string? Sku,
-            [property: JsonPropertyName("internalCode")] string? InternalCode,
-            [property: JsonPropertyName("name")] string? Name,
-            [property: JsonPropertyName("description")] string? Description,
-            [property: JsonPropertyName("currentUnitPrice")] decimal CurrentUnitPrice,
-            [property: JsonPropertyName("stockQuantity")] int StockQuantity,
-            [property: JsonPropertyName("isActive")] bool IsActive
-        );
-    }
+    public record ResponseProductModel(Guid Id, string Sku, string InternalCode, string Name, string Description, decimal CurrentUnitPrice, int StockQuantity, bool IsActive);
+
 }
