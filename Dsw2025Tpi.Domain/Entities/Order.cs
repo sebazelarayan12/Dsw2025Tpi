@@ -24,11 +24,8 @@ public class Order : EntityBase
     public string? BillingAddress { get; set; }
     public string? Notes { get; set; }
     public decimal TotalAmount => OrderItems.Sum(p => p.Subtotal);
-
-
     public OrderStatus Status { get; set; }
     public Guid CustomerId { get; set; }
     public Customer? Customer { get; set; }
     public ICollection<OrderItem> OrderItems { get; set; }
-
 }

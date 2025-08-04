@@ -32,7 +32,7 @@ public class Product : EntityBase
         set
         {
             if (value <= 0)
-                throw new ArgumentException("The price must be greater than 0");
+                throw new ArgumentException("El precio tiene que ser mayor a 0");
             _currentUnitPrice = value;
         }
     }
@@ -43,7 +43,7 @@ public class Product : EntityBase
         set
         {
             if (value < 0)
-                throw new ArgumentException("The stock quantity can't be negative");
+                throw new ArgumentException("La cantidad de stock no puede ser negativa");
             _stockQuantity = value;
         }
     }

@@ -35,16 +35,16 @@ public class AuthenticateController : ControllerBase
         var user = await _userManager.FindByNameAsync(request.Username);
         if (user == null)
         {
-            throw new UnauthorizedException("Incorrect username or password");
+            throw new ArgumentException("Usuario o contraseña incorrecta");
         }
 
         var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
         if (!result.Succeeded)
         {
-            throw new UnauthorizedException("Incorrect username or password");
+            throw new ArgumentException("Usuario o contraseña incorrecta");
         }
         var roles = await _userManager.GetRolesAsync(user);
-        var role = roles.FirstOrDefault() ?? throw new ApplicationException("User has not assigned role");
+        var role = roles.FirstOrDefault() ?? throw new ApplicationException("Usuario no tiene asignado un rol");
 
         var token = _jwtTokenService.GenerateToken(request.Username, role);
         return Ok(new { token });
@@ -61,6 +61,6 @@ public class AuthenticateController : ControllerBase
         if (!result.Succeeded)
             return BadRequest(result.Errors);
 
-        return Ok("User successfully registered.");
+        return Ok("Usuario exitosamente creado.");
     }
 }

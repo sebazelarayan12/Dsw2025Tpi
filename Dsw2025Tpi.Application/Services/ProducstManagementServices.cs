@@ -1,6 +1,5 @@
 ﻿using Dsw2025Tpi.Application.Dtos;
 using Dsw2025Tpi.Application.Exceptions;
-using Dsw2025Tpi.Application.Interfaces;
 using Dsw2025Tpi.Application.Validation;
 using Dsw2025Tpi.Data.Repositories;
 using Dsw2025Tpi.Domain.Entities;
@@ -14,7 +13,7 @@ using ApplicationException = Dsw2025Tpi.Application.Exceptions.ApplicationExcept
 
 namespace Dsw2025Tpi.Application.Services
 {
-    public class ProductsManagementService : IProductsManagementService
+    public class ProductsManagementService
     {
         private readonly IRepository _repository;
 
@@ -45,7 +44,7 @@ namespace Dsw2025Tpi.Application.Services
         {
             ProductValidator.Validate(request);
             var exist = await _repository.First<Product>(p => p.Sku == request.Sku);
-            if (exist != null) throw new DuplicatedEntityException($"A product with Sku {request.Sku} already exists");
+            if (exist != null) throw new DuplicatedEntityException($"Un producto con Sku {request.Sku} ya existe");
             var product = new Product(request.Sku, request.InternalCode, request.Name, request.Description, request.CurrentUnitPrice, request.StockQuantity);
             await _repository.Add(product);
             return new ProductModel.ResponseProductModel(product.Id, product.Sku, product.InternalCode, product.Name, product.Description,
@@ -60,7 +59,7 @@ namespace Dsw2025Tpi.Application.Services
             ProductValidator.Validate(request);
 
             var sku = await _repository.First<Product>(p => p.Sku == request.Sku && p.IsActive);
-            if (sku != null) throw new DuplicatedEntityException($"A product with Sku {request.Sku} already exists");
+            if (sku != null) throw new DuplicatedEntityException($"Un producto con Sku {request.Sku} ya existe");
 
             exist.Sku = request.Sku;
             exist.InternalCode = request.InternalCode;
@@ -90,7 +89,7 @@ namespace Dsw2025Tpi.Application.Services
             if (exist == null)
                 throw new EntityNotFoundException("Product not found");
             if (exist.IsActive == false)
-                throw new ApplicationException("The product was already disabled");
+                throw new ApplicationException("Producto ya deshabilitado");
             exist.IsActive = false;
             await _repository.Update(exist);
         }

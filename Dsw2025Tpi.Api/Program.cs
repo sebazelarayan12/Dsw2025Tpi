@@ -98,16 +98,6 @@ public class Program
             };
         });
 
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy("PermitirFrontend", policy =>
-            {
-                policy.WithOrigins("http://localhost:3000")
-                      .AllowAnyHeader()
-                      .AllowAnyMethod();
-            });
-        });
-
 
         var app = builder.Build();
 
@@ -124,8 +114,6 @@ public class Program
             dbContext.Seedwork<Order>("Sources/orders.json");
            
             
-            
-
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
             foreach (var roleName in rolesToCreate!)
@@ -165,8 +153,6 @@ public class Program
         }
 
         app.UseHttpsRedirection();
-
-        app.UseCors("PermitirFrontend");
 
         app.UseAuthentication();
         app.UseAuthorization();

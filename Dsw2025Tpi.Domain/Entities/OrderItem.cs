@@ -25,7 +25,7 @@ public class OrderItem : EntityBase
         {
             if (value <= 0)
             {
-                throw new ArgumentOutOfRangeException("The quantity must be greater than or equal to 0");
+                throw new ArgumentOutOfRangeException("La cantidad tiene que ser mayor a 0");
             }
             _quantity = value;
         }
@@ -41,7 +41,7 @@ public class OrderItem : EntityBase
         {
             if (value < 0)
             {
-                throw new ArgumentOutOfRangeException("The unit price must be greater than 0");
+                throw new ArgumentOutOfRangeException("El precio unitario debe ser mayor a 0");
             }
             _unitPrice = value;
         }

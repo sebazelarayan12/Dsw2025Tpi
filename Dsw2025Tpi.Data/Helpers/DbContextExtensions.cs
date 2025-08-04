@@ -43,7 +43,7 @@ public static class DbContextExtensions
             }
             context.SaveChanges();
 
-            // Ahora manejar OrderItems por separado si están incluidos en el JSON
+            // manejar OrderItems por cada uno que estén en el JSON
             foreach (var order in orders)
             {
                 if (order.OrderItems?.Any() == true)

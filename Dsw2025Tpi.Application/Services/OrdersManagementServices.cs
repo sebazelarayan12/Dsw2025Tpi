@@ -1,7 +1,6 @@
 ﻿using Azure.Core;
 using Dsw2025Tpi.Application.Dtos;
 using Dsw2025Tpi.Application.Exceptions;
-using Dsw2025Tpi.Application.Interfaces;
 using Dsw2025Tpi.Application.Validation;
 using Dsw2025Tpi.Data.Repositories;
 using Dsw2025Tpi.Domain.Entities;
@@ -15,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Dsw2025Tpi.Application.Services
 {
-    public class OrdersManagementService : IOrdersManagementService
+    public class OrdersManagementService
     {
         private readonly IRepository _repository;
 
@@ -52,7 +51,7 @@ namespace Dsw2025Tpi.Application.Services
                 !Enum.IsDefined(typeof(OrderStatus), parsedStatus) ||
                 int.TryParse(request.Status, out _))
                 {
-                    throw new ArgumentException($"Invalid order status: {request.Status}");
+                    throw new ArgumentException($"Estado de orden invalido: {request.Status}");
                 }
                 status = parsedStatus;
             }
@@ -61,7 +60,7 @@ namespace Dsw2025Tpi.Application.Services
             {
                 var customer = await _repository.GetById<Customer>(request.CustomerId.Value);
                 if (customer == null)
-                    throw new EntityNotFoundException($"Customer with ID {request.CustomerId} not found.");
+                    throw new EntityNotFoundException($"Customer con el ID {request.CustomerId} not found.");
             }
 
             var orders = await _repository.GetFiltered<Order>(
@@ -72,9 +71,9 @@ namespace Dsw2025Tpi.Application.Services
                 include: new[] { "OrderItems.Product" }
             );
 
-            if (request.PageNumber <= 0) throw new ArgumentException("Page number must be greater than zero.");
+            if (request.PageNumber <= 0) throw new ArgumentException("Numero de pagina tiene que ser mayor que 0.");
 
-            if (request.PageSize <= 0) throw new ArgumentException("Page size must be greater than zero.");
+            if (request.PageSize <= 0) throw new ArgumentException("Tamaño de pagina tiene que ser mayor que 0.");
 
             var paginatedOrders = orders.Select(
                 order => new OrderModel.ResponseOrderModel(
@@ -106,11 +105,11 @@ namespace Dsw2025Tpi.Application.Services
             OrderValidator.Validate(request);
 
             if (request.Items == null || !request.Items.Any())
-                throw new ArgumentException("The order must have at least one item.");
+                throw new ArgumentException("La orden tiene que tener mas de un item.");
 
             var customer = await _repository.GetById<Customer>(request.CustomerId);
             if (customer == null)
-                throw new EntityNotFoundException($"Customer with ID {request.CustomerId} not found.");
+                throw new EntityNotFoundException($"Customer con ID {request.CustomerId} not found.");
 
             var order = new Order(
                 request.ShippingAddress,
@@ -124,10 +123,10 @@ namespace Dsw2025Tpi.Application.Services
             foreach (var item in request.Items)
             {
                 var product = await _repository.GetById<Product>(item.ProductId)
-                    ?? throw new EntityNotFoundException($"Product not found: {item.ProductId}");
+                    ?? throw new EntityNotFoundException($"Producto not found: {item.ProductId}");
 
                 if (product.StockQuantity < item.Quantity)
-                    throw new InvalidOperationException($"Insufficient stock for product: {product.Name}");
+                    throw new InvalidOperationException($"Stock insuficiente: {product.Name}");
 
                 product.StockQuantity -= item.Quantity;
                 await _repository.Update(product);
@@ -171,10 +170,10 @@ namespace Dsw2025Tpi.Application.Services
             var order = await _repository.GetById<Order>(id, nameof(Order.OrderItems), "OrderItems.Product");
 
             if (order == null)
-                throw new EntityNotFoundException($"Order with ID: {id} not found");
+                throw new EntityNotFoundException($"Order con el ID: {id} not found");
 
             if (!Enum.TryParse<OrderStatus>(newStatus, true, out var status) || int.TryParse(newStatus, out _))
-                throw new ArgumentException("The state entered is not valid");
+                throw new ArgumentException("El estado no es valido");
 
             if (status == OrderStatus.CANCELLED)
             {
