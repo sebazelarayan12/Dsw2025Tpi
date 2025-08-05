@@ -1,5 +1,11 @@
 # Trabajo Práctico Integrador
 ## Desarrollo de Software
+
+## Integrantes:
+
+Schedan Paula, 56201-
+Zelarayan Sebastián, 60016
+
 ### Backend
 
 ## Introducción

@@ -24,11 +24,9 @@ namespace Dsw2025Tpi.Application.Services
         public async Task<ProductModel.ResponseProductModel?> GetProductById(Guid id)
         {
             var product = await _repository.GetById<Product>(id);
-            if (product == null)
-                throw new EntityNotFoundException("Product not found");
-            return product != null ?
-                new ProductModel.ResponseProductModel(product.Id, product.Sku, product.InternalCode, product.Name, product.Description, product.CurrentUnitPrice, product.StockQuantity, product.IsActive) :
-                null;
+            return product == null
+                ? throw new EntityNotFoundException("Product not found")
+                : new ProductModel.ResponseProductModel(product.Id, product.Sku, product.InternalCode, product.Name, product.Description, product.CurrentUnitPrice, product.StockQuantity, product.IsActive);
         }
 
         public async Task<IEnumerable<ProductModel.ResponseProductModel>?> GetAllProducts()
@@ -37,7 +35,6 @@ namespace Dsw2025Tpi.Application.Services
                 .GetFiltered<Product>(p => p.IsActive))?
                 .Select(p => new ProductModel.ResponseProductModel(p.Id, p.Sku, p.InternalCode, p.Name, p.Description,
                 p.CurrentUnitPrice, p.StockQuantity, p.IsActive));
-
         }
 
         public async Task<ProductModel.ResponseProductModel> AddProduct(ProductModel.RequestProductModel request)
