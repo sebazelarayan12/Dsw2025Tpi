@@ -9,22 +9,22 @@ namespace Dsw2025Tpi.Application.Validation
         public static void Validate(ProductModel.RequestProductModel request)
         {
             if (string.IsNullOrWhiteSpace(request.Sku))
-                throw new Exceptions.ApplicationException("SKU is required.");
+                throw new Exceptions.ApplicationException("SKU es requerido");
 
             if (string.IsNullOrWhiteSpace(request.InternalCode))
-                throw new Exceptions.ApplicationException("The internal code is mandatory.");
+                throw new Exceptions.ApplicationException("El codigo interno es obligatorio.");
 
             if (string.IsNullOrWhiteSpace(request.Name))
-                throw new Exceptions.ApplicationException("Name is required.");
+                throw new Exceptions.ApplicationException("Nombre es requerido.");
 
             if (string.IsNullOrWhiteSpace(request.Description))
-                throw new Exceptions.ApplicationException("Description is required.");
+                throw new Exceptions.ApplicationException("La descripcion es requerida.");
 
             if (request.CurrentUnitPrice <= 0)
-                throw new Exceptions.ApplicationException("The price must be a positive value.");
+                throw new Exceptions.ApplicationException("El precio debe ser un valor positivo.");
 
             if (request.StockQuantity < 0)
-                throw new Exceptions.ApplicationException("The stock quantity must be greater than or equal to 0");
+                throw new ArgumentException("La cantidad de stock debe ser mayor o igual a 0");
         }
     }
 

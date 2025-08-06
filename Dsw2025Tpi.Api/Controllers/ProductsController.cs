@@ -65,10 +65,6 @@ public class ProductsController : ControllerBase
         {
             return BadRequest(ioe.Message);
         }
-        catch (Exception)
-        {
-            return Problem("Se produjo un error al guardar el producto");
-        }
     }
 
     [HttpPut("{id}")]
@@ -91,11 +87,6 @@ public class ProductsController : ControllerBase
         {
             
             return BadRequest(ae.Message);
-        }
-        catch (Exception ex)
-        {
-            
-            return Problem($"Error al actualizar el producto: {ex.Message}");
         }
     }
 

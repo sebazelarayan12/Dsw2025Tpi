@@ -30,7 +30,7 @@ public class OrdersController : ControllerBase
     }
 
     [HttpPost]
-    [AllowAnonymous]
+    [Authorize(Roles = "User")]
     public async Task<IActionResult> AddOrder([FromBody] OrderModel.RequestOrderModel request)
     {
         try
@@ -48,6 +48,10 @@ public class OrdersController : ControllerBase
         catch (InvalidOperationException ioe)
         {
             
+            return BadRequest(ioe.Message);
+        }
+        catch (EntityNotFoundException ioe)
+        {
             return BadRequest(ioe.Message);
         }
     }
