@@ -88,6 +88,10 @@ public class ProductsController : ControllerBase
             
             return BadRequest(ae.Message);
         }
+        catch (ApplicationException ioe)
+        {
+            return BadRequest(ioe.Message);
+        }
     }
 
     [HttpPatch("{id}")]

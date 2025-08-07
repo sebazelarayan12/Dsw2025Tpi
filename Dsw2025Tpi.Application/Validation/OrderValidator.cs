@@ -19,7 +19,7 @@ namespace Dsw2025Tpi.Application.Validation
             if (string.IsNullOrWhiteSpace(request.BillingAddress) || request.BillingAddress.Length > 256)
                 throw new InvalidOperationException("La direccion de envio es requerida.");
 
-            if (request.Items == null || request.Items.Count == 0)
+            if (request.OrderItems == null || request.OrderItems.Count == 0)
                 throw new InvalidOperationException("Se debe incluir almenos un item en la orden.");
         }
     }

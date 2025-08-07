@@ -30,7 +30,7 @@ public class OrdersController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "User")]
+    [Authorize(Roles = "Admin, User")]
     public async Task<IActionResult> AddOrder([FromBody] OrderModel.RequestOrderModel request)
     {
         try
