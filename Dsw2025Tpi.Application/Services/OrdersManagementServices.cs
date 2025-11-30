@@ -138,6 +138,9 @@ namespace Dsw2025Tpi.Application.Services
                     product.Id
                 );
                 orderItems.Add(orderItem);
+
+
+
             }
 
             order.OrderItems = orderItems;

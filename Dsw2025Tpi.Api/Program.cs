@@ -57,6 +57,16 @@ public class Program
                     }
                 });
         });
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowFrontend", policy =>
+            {
+                policy.WithOrigins("http://localhost:5173", "http://localhost:5174") // Agregamos ambos puertos por seguridad
+                      .AllowAnyHeader()
+                      .AllowAnyMethod()
+                      .AllowCredentials();
+            });
+        });
         builder.Services.AddHealthChecks();
         builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
         {
@@ -127,20 +137,36 @@ public class Program
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
             var adminSection = builder.Configuration.GetSection("DefaultAdminUser");
 
-            var adminUser = await userManager.FindByNameAsync(adminSection["UserName"]);
+            // Add null checks and better error handling
+            var userName = adminSection["UserName"];
+            var email = adminSection["Email"];  
+            var password = adminSection["Password"];
+            var role = adminSection["Role"];
+
+            if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(email) || 
+                string.IsNullOrEmpty(password) || string.IsNullOrEmpty(role))
+            {
+                throw new InvalidOperationException("DefaultAdminUser configuration is missing or incomplete");
+            }
+
+            var adminUser = await userManager.FindByNameAsync(userName);
             if (adminUser == null)
             {
                 var newUser = new IdentityUser
                 {
-                    UserName = adminSection["UserName"],
-                    Email = adminSection["Email"],
+                    UserName = userName,
+                    Email = email,
                     EmailConfirmed = true
                 };
 
-                var result = await userManager.CreateAsync(newUser, adminSection["Password"]);
+                var result = await userManager.CreateAsync(newUser, password);
                 if (result.Succeeded)
                 {
-                    await userManager.AddToRoleAsync(newUser, adminSection["Role"]);
+                    await userManager.AddToRoleAsync(newUser, role);
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Failed to create admin user: {string.Join(", ", result.Errors.Select(e => e.Description))}");
                 }
             }
 
@@ -152,6 +178,7 @@ public class Program
             app.UseSwaggerUI();
         }
 
+        app.UseCors("AllowFrontend");
         app.UseHttpsRedirection();
 
         app.UseAuthentication();
