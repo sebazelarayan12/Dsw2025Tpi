@@ -1,12 +1,8 @@
 ﻿using Dsw2025Tpi.Application.Dtos;
-using Dsw2025Tpi.Application.Exceptions;
 using Dsw2025Tpi.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using ApplicationException = Dsw2025Tpi.Application.Exceptions.ApplicationException;
 
 namespace Dsw2025Tpi.Api.Controllers;
 
@@ -33,18 +29,30 @@ public class AuthenticateController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginModel request)
     {
         var user = await _userManager.FindByNameAsync(request.Username);
+
+        // 1. CORRECCIÓN: Si no existe el usuario, retornamos 401 (No autorizado)
+        // en lugar de lanzar una excepción.
         if (user == null)
         {
-            throw new ArgumentException("Usuario o contraseña incorrecta");
+            return Unauthorized("Usuario o contraseña incorrecta");
         }
 
         var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
+
+        // 2. CORRECCIÓN: Si la contraseña está mal, retornamos 401.
         if (!result.Succeeded)
         {
-            throw new ArgumentException("Usuario o contraseña incorrecta");
+            return Unauthorized("Usuario o contraseña incorrecta");
         }
+
         var roles = await _userManager.GetRolesAsync(user);
-        var role = roles.FirstOrDefault() ?? throw new ApplicationException("Usuario no tiene asignado un rol");
+
+        // 3. CORRECCIÓN: Manejo seguro del rol sin exceptions
+        var role = roles.FirstOrDefault();
+        if (role == null)
+        {
+            return StatusCode(500, "El usuario no tiene asignado un rol.");
+        }
 
         var token = _jwtTokenService.GenerateToken(request.Username, role);
         return Ok(new { token });
@@ -54,10 +62,13 @@ public class AuthenticateController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Register([FromBody] RegisterModel model)
     {
-
         var user = new IdentityUser { UserName = model.Username, Email = model.Email };
         var result = await _userManager.CreateAsync(user, model.Password);
-        var role = await _userManager.AddToRoleAsync(user, "User");
+
+        // Nota: Aquí asumimos que el rol "User" ya existe. 
+        // Si falla, asegurar que el seeding en Program.cs lo haya creado.
+        var roleResult = await _userManager.AddToRoleAsync(user, "User");
+
         if (!result.Succeeded)
             return BadRequest(result.Errors);
 
