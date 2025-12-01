@@ -61,7 +61,7 @@ public class Program
         {
             options.AddPolicy("AllowFrontend", policy =>
             {
-                policy.WithOrigins("http://localhost:5173", "http://localhost:5174") // Agregamos ambos puertos por seguridad
+                policy.WithOrigins("http://localhost:5173", "http://localhost:5174") // Agregamos ambos puertos porque no logré otra solucion :/
                       .AllowAnyHeader()
                       .AllowAnyMethod()
                       .AllowCredentials();
@@ -185,6 +185,8 @@ public class Program
         app.UseAuthorization();
 
       
+
+        app.Logger.LogInformation("Application has started successfully.");
 
         app.MapControllers();
         app.MapHealthChecks("/healthcheck");

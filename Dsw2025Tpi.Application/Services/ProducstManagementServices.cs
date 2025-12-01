@@ -4,6 +4,8 @@ using Dsw2025Tpi.Application.Validation;
 using Dsw2025Tpi.Data.Repositories;
 using Dsw2025Tpi.Domain.Entities;
 using Dsw2025Tpi.Domain.Interfaces;
+using Azure.Core;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,11 +17,13 @@ namespace Dsw2025Tpi.Application.Services
 {
     public class ProductsManagementService
     {
+        private readonly ILogger<ProductsManagementService> _logger;
         private readonly IRepository _repository;
 
-        public ProductsManagementService(IRepository repository)
+        public ProductsManagementService(IRepository repository, ILogger<ProductsManagementService> logger)
         {
             _repository = repository;
+            _logger = logger;
         }
         public async Task<ProductModel.ResponseProductModel?> GetProductById(Guid id)
         {
@@ -89,6 +93,39 @@ namespace Dsw2025Tpi.Application.Services
                 throw new ApplicationException("Producto ya deshabilitado");
             exist.IsActive = false;
             await _repository.Update(exist);
+        }
+
+        public async Task<ProductModel.ResponsePagination?> GetProducts(ProductModel.FilterProduct request)
+        {
+            var isActive = request.Status == "enabled"
+                ? (bool?)true
+                : request.Status == "disabled"
+                    ? (bool?)false
+                    : null;
+            _logger.LogInformation("Consulta de productos");
+            var activeProducts = await _repository.GetFiltered<Product>(p => (
+
+                (isActive == null || p.IsActive == isActive)
+                && (string.IsNullOrEmpty(request.Search) || p.Name.Contains(request.Search)))
+                );
+            if (activeProducts is null || !activeProducts.Any())
+                throw new EntityNotFoundException("No Products were found"); //probar con NoContent
+
+            var products = activeProducts.Select(p => new ProductModel.ResponseProductModel(
+                    p.Id,
+                    p.Sku,
+                    p.InternalCode,
+                    p.Name,
+                    p.Description,
+                    p.CurrentUnitPrice,
+                    p.StockQuantity,
+                    p.IsActive))
+                .OrderBy(p => p.Sku)
+                .Skip((request.pageNumber - 1) * request.PageSize ?? 0)
+                .Take(request.PageSize ?? activeProducts.Count());
+
+            return new ProductModel.ResponsePagination(products.ToList(), activeProducts.Count());
+
         }
     }
 }

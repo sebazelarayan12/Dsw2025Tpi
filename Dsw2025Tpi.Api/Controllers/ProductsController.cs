@@ -21,13 +21,25 @@ public class ProductsController : ControllerBase
         _service = service;
     }
 
-    [HttpGet()]
+    /* [HttpGet()] codigo anterior donde muestra todos los productos sin paginacion
     [AllowAnonymous]
     public async Task<IActionResult> GetAllProducts()
     {
         var products = await _service.GetAllProducts();
         if (products == null || !products.Any()) return NoContent();
         return Ok(products);
+    } */
+
+    [HttpGet()]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetProducts([FromQuery] ProductModel.FilterProduct filter)
+    {
+        // Ahora le pasamos 'filter' al paréntesis
+        var result = await _service.GetProducts(filter);
+        // 2. Validamos si trajo algo
+        if (result == null) return NoContent();
+        // 3. Devolvemos el resultado (que ya incluye la lista y el total)
+        return Ok(result);
     }
 
     [HttpGet("{id}")]
@@ -114,5 +126,20 @@ public class ProductsController : ControllerBase
             
             return BadRequest(ae.Message);
         }
+    }
+
+    /*dashboard!!!*/
+
+    [HttpGet("admin")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetAuthProducts([FromQuery] ProductModel.FilterProduct request)
+    {
+        var products = await _service.GetProducts(request);
+        if (products == null)
+        {
+            Response.Headers.Append("X-Message", "There are no active products");
+            return NoContent();
+        }
+        return Ok(products);
     }
 }
