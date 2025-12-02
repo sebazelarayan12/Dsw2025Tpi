@@ -1,26 +1,27 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 
 namespace Dsw2025Tpi.Domain.Entities;
 
 public class Customer : EntityBase
 {
-    public Customer(string? email, string? name, string? phoneNumber)
-    {
-        Email = email;
-        Name = name;
-        PhoneNumber = phoneNumber;
+    [Required]
+    public string Name { get; set; } = string.Empty;
 
-    }
+    [Required]
+    public string Email { get; set; } = string.Empty;
 
-    public string? Email { get; set; }
-    public string? Name { get; set; }
     public string? PhoneNumber { get; set; }
 
+    // Constructor vacío para Entity Framework
+    protected Customer() { }
 
-    public ICollection<Order>? Orders { get; set; }
-
+    // Constructor modificado para aceptar el ID específico
+    public Customer(Guid id, string name, string email, string? phoneNumber = "N/A")
+        : base(id) // Llamamos al constructor nuevo de EntityBase
+    {
+        Name = name;
+        Email = email;
+        PhoneNumber = phoneNumber;
+    }
 }

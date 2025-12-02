@@ -1,5 +1,4 @@
-﻿using Azure.Core;
-using Dsw2025Tpi.Application.Dtos;
+﻿using Dsw2025Tpi.Application.Dtos;
 using Dsw2025Tpi.Application.Exceptions;
 using Dsw2025Tpi.Application.Services;
 using Dsw2025Tpi.Domain.Entities;
@@ -21,12 +20,16 @@ public class OrdersController : ControllerBase
     }
 
     [HttpGet()]
-    [AllowAnonymous]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetAllOrders([FromQuery] OrderModel.SearchOrder request)
     {
-        var orders = await _service.GetAllOrders(request);
-        if (orders == null || !orders.Any()) return NoContent();
-        return Ok(orders);
+        var result = await _service.GetAllOrders(request);
+
+        // Si el servicio devuelve null o la lista de items está vacía
+        if (result == null || result.Items == null || !result.Items.Any())
+            return NoContent();
+
+        return Ok(result);
     }
 
     [HttpPost]

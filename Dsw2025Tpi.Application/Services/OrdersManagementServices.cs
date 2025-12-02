@@ -42,20 +42,21 @@ namespace Dsw2025Tpi.Application.Services
                 null;
         }
 
-        public async Task<IEnumerable<OrderModel.ResponseOrderModel>?> GetAllOrders(OrderModel.SearchOrder request)
+        public async Task<OrderModel.ResponsePagination?> GetAllOrders(OrderModel.SearchOrder request)
         {
+            // 1. Parseo de Estado (Igual que tenías)
             OrderStatus? status = null;
             if (!string.IsNullOrWhiteSpace(request.Status))
             {
-                if (!Enum.TryParse<OrderStatus>(request.Status, true, out var parsedStatus) ||
-                !Enum.IsDefined(typeof(OrderStatus), parsedStatus) ||
-                int.TryParse(request.Status, out _))
+                if (!Enum.TryParse<OrderStatus>(request.Status, true, out var parsedStatus))
                 {
+                    // Opción: Ignorar filtro inválido o lanzar error. Aquí lanzamos.
                     throw new ArgumentException($"Estado de orden invalido: {request.Status}");
                 }
                 status = parsedStatus;
             }
 
+            // 2. Validación de Cliente
             if (request.CustomerId.HasValue)
             {
                 var customer = await _repository.GetById<Customer>(request.CustomerId.Value);
@@ -63,6 +64,7 @@ namespace Dsw2025Tpi.Application.Services
                     throw new EntityNotFoundException($"Customer con el ID {request.CustomerId} not found.");
             }
 
+            // 3. Obtener datos filtrados
             var orders = await _repository.GetFiltered<Order>(
                 o =>
                     o.Status != OrderStatus.CANCELLED &&
@@ -71,33 +73,39 @@ namespace Dsw2025Tpi.Application.Services
                 include: new[] { "OrderItems.Product" }
             );
 
-            if (request.PageNumber <= 0) throw new ArgumentException("Numero de pagina tiene que ser mayor que 0.");
+            // 4. Calcular Total (Para la paginación)
+            var totalCount = orders.Count();
 
-            if (request.PageSize <= 0) throw new ArgumentException("Tamaño de pagina tiene que ser mayor que 0.");
+            // 5. Validar y Corregir Paginación
+            int pageNumber = request.PageNumber <= 0 ? 1 : request.PageNumber;
+            int pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
 
-            var paginatedOrders = orders.Select(
-                order => new OrderModel.ResponseOrderModel(
-                order.Id,
-                order.Date,
-                order.ShippingAddress,
-                order.BillingAddress,
-                order.Notes,
-                order.CustomerId,
-                order.Status,
-                order.TotalAmount,
-                order.OrderItems.Select(i => new OrderItemModel.ResponseOrderItemModel(
-                    i.Id,
-                    i.Quantity,
-                    i.UnitPrice,
-                    i.OrderId,
-                    i.ProductId,
-                    i.Subtotal
-                )).ToList()
-            ))
-                .Skip((request.PageNumber - 1) * request.PageSize)
-                .Take(request.PageSize);
+            // 6. Paginar y Mapear
+            var paginatedItems = orders
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(order => new OrderModel.ResponseOrderModel(
+                    order.Id,
+                    order.Date,
+                    order.ShippingAddress,
+                    order.BillingAddress,
+                    order.Notes,
+                    order.CustomerId,
+                    order.Status,
+                    order.TotalAmount,
+                    order.OrderItems.Select(i => new OrderItemModel.ResponseOrderItemModel(
+                        i.Id,
+                        i.Quantity,
+                        i.UnitPrice,
+                        i.OrderId,
+                        i.ProductId,
+                        i.Subtotal
+                    )).ToList()
+                ))
+                .ToList();
 
-            return paginatedOrders;
+            // 7. Devolver Objeto Paginado
+            return new OrderModel.ResponsePagination(paginatedItems, totalCount);
         }
 
         public async Task<OrderModel.ResponseOrderModel> AddOrder(OrderModel.RequestOrderModel request)
