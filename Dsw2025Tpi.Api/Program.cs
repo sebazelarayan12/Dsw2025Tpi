@@ -25,6 +25,7 @@ public class Program
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+
             });
 
         builder.Services.AddEndpointsApiExplorer();

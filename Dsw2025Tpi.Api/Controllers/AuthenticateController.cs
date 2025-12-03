@@ -101,11 +101,13 @@ public class AuthenticateController : ControllerBase
         // 4. Crear el Customer espejo (Tabla Customers)
         try
         {
-            // CORRECCIÓN: Usamos el constructor que acabamos de crear
-            // Pasamos: (ID, Nombre, Email)
+            // CORRECCIÓN: Usamos model.Name en lugar de model.Username
+            // Si model.Name viene vacío, usamos el Username como fallback
+            string customerName = !string.IsNullOrWhiteSpace(model.Name) ? model.Name : model.Username;
+
             var customer = new Customer(
                 Guid.Parse(user.Id),
-                model.Username,
+                customerName, // <--- AQUI USAMOS EL NOMBRE REAL
                 model.Email
             );
 
