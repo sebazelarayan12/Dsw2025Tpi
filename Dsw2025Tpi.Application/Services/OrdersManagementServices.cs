@@ -38,7 +38,7 @@ namespace Dsw2025Tpi.Application.Services
                 )).ToList();
 
             return order != null ?
-                new OrderModel.ResponseOrderModel(order.Id, order.Date, order.ShippingAddress, order.BillingAddress, order.Notes, order.CustomerId, order.Status, order.TotalAmount, responseItems) :
+                new OrderModel.ResponseOrderModel(order.Id, order.Date, order.ShippingAddress, order.BillingAddress, order.Notes, order.CustomerId, order.Customer?.Name, order.Status, order.TotalAmount, responseItems) :
                 null;
         }
 
@@ -70,7 +70,7 @@ namespace Dsw2025Tpi.Application.Services
                     o.Status != OrderStatus.CANCELLED &&
                     (!request.CustomerId.HasValue || o.CustomerId == request.CustomerId.Value) &&
                     (!status.HasValue || o.Status == status.Value),
-                include: new[] { "OrderItems.Product" }
+                include: new[] { "OrderItems.Product", "Customer" }
             );
 
             // 4. Calcular Total (Para la paginación)
@@ -91,6 +91,7 @@ namespace Dsw2025Tpi.Application.Services
                     order.BillingAddress,
                     order.Notes,
                     order.CustomerId,
+                    order.Customer?.Name,
                     order.Status,
                     order.TotalAmount,
                     order.OrderItems.Select(i => new OrderItemModel.ResponseOrderItemModel(
@@ -170,6 +171,7 @@ namespace Dsw2025Tpi.Application.Services
                 order.BillingAddress,
                 order.Notes,
                 order.CustomerId,
+                order.Customer?.Name,
                 order.Status,
                 order.TotalAmount,
                 responseItems
@@ -220,6 +222,7 @@ namespace Dsw2025Tpi.Application.Services
                 order.BillingAddress,
                 order.Notes,
                 order.CustomerId,
+                order.Customer?.Name,
                 order.Status,
                 order.TotalAmount,
                 responseItems
